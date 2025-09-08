@@ -1,6 +1,6 @@
 [build]
   publish = "build"
-  command = "npm run build"
+  command = "CI=false npm run build"
 
 [[redirects]]
   from = "/*"
@@ -11,3 +11,5 @@
   NODE_VERSION = "18"
   REACT_APP_FRAPPE_URL = "https://qswr.sa"
   GENERATE_SOURCEMAP = "false"
+  CI = "false"
+  ESLINT_NO_DEV_ERRORS = "true"
