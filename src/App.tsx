@@ -16,11 +16,35 @@ import UserProfile from './components/UserProfile';
 function App() {
   const frappeUrl = process.env.REACT_APP_FRAPPE_URL || 'https://qswr.sa';
   
+  // Function to get token from localStorage
+  const getTokenFromLocalStorage = (): string => {
+    const apiKey = localStorage.getItem('frappe_token');
+    const apiSecret = localStorage.getItem('frappe_api_secret');
+    
+    console.log('🔍 App.tsx - Reading from localStorage:');
+    console.log('frappe_token:', apiKey);
+    console.log('frappe_api_secret:', apiSecret);
+    
+    if (apiKey && apiSecret) {
+      const token = `${apiKey}:${apiSecret}`;
+      console.log('🔑 Combined token for FrappeProvider:', token);
+      return token;
+    }
+    
+    console.log('⚠️ No token found in localStorage');
+    return '';
+  };
+  
   return (
     <ThemeProvider>
       <FrappeProvider 
         url={frappeUrl}
         enableSocket={false}
+        tokenParams={{
+          useToken: true,
+          token: getTokenFromLocalStorage,
+          type: "token" // Use "token" for Frappe API key format
+        }}
         swrConfig={{
           revalidateOnFocus: false,
           revalidateOnReconnect: false,

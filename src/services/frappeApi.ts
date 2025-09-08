@@ -4,14 +4,20 @@ import { useAuth } from '../contexts/AuthContext';
 class FrappeApiClient {
   private baseURL: string;
   private token: string | null = null;
+  private apiSecret: string | null = null;
 
   constructor() {
     this.baseURL = process.env.REACT_APP_FRAPPE_URL || 'https://qswr.sa';
     this.token = localStorage.getItem('frappe_token');
+    this.apiSecret = localStorage.getItem('frappe_api_secret');
   }
 
   setToken(token: string | null) {
     this.token = token;
+  }
+
+  setApiSecret(apiSecret: string | null) {
+    this.apiSecret = apiSecret;
   }
 
   private async request(endpoint: string, options: RequestInit = {}): Promise<any> {
@@ -25,13 +31,22 @@ class FrappeApiClient {
 
     // Add token to headers if available
     if (this.token) {
-      headers['Authorization'] = `token ${this.token}`;
+      // Check if it's a rest_auth token, Frappe API key, or our session token
+      if (this.token.startsWith('frappe_session_')) {
+        // For session tokens, we'll use cookies for authentication
+        console.log('🔑 Using session token for app state, cookies for Frappe API');
+      } else {
+        // For rest_auth API keys, use Frappe's API key format
+        headers['Authorization'] = `token ${this.token}:${this.apiSecret || ''}`;
+        console.log('🔑 Using rest_auth API key authentication:', this.token.substring(0, 8) + '...');
+      }
     }
 
     const config: RequestInit = {
       ...options,
       headers,
       mode: 'cors',
+      credentials: 'include', // Always include cookies for Frappe authentication
     };
 
     try {
@@ -117,9 +132,11 @@ export const frappeApi = new FrappeApiClient();
 export const useFrappeApi = () => {
   const { token } = useAuth();
   
-  // Update token in API client when auth context changes
+  // Update token and API secret in API client when auth context changes
   React.useEffect(() => {
     frappeApi.setToken(token);
+    const apiSecret = localStorage.getItem('frappe_api_secret');
+    frappeApi.setApiSecret(apiSecret);
   }, [token]);
 
   return frappeApi;

@@ -206,8 +206,8 @@ const UserProfile = styled.div`
 `;
 
 const UserAvatar = styled.div`
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: ${({ theme }) => theme.colors.gradients.accent};
   display: flex;
@@ -216,6 +216,15 @@ const UserAvatar = styled.div`
   color: white;
   font-weight: ${({ theme }) => theme.typography.fontWeights.bold};
   font-size: ${({ theme }) => theme.typography.fontSizes.sm};
+  transition: all ${({ theme }) => theme.transitions.normal};
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  border: 2px solid ${({ theme }) => theme.colors.surface.border};
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: ${({ theme }) => theme.shadows.md};
+    border-color: ${({ theme }) => theme.colors.primary[300]};
+  }
 `;
 
 const UserInfo = styled.div`
@@ -334,11 +343,11 @@ const AppBar: React.FC = () => {
             <BusinessCenterSubtitle>  </BusinessCenterSubtitle>
           </BusinessCenterLogo>
           <UserProfile>
-            <UserAvatar>
-                              {currentUser ? getInitials(userFullName || 'مستخدم') : 'U'}
+            <UserAvatar onClick={() => history.push('/profile')} style={{ cursor: 'pointer' }}>
+              {currentUser ? getInitials(userFullName || 'مستخدم') : 'U'}
             </UserAvatar>
             <UserInfo>
-                             <UserName>{userFullName || 'مستخدم'}</UserName>
+              <UserName>{userFullName || 'مستخدم'}</UserName>
               <UserRole>مستخدم</UserRole>
             </UserInfo>
             <LogoutButton onClick={handleLogout}>

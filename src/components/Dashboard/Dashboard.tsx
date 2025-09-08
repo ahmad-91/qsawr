@@ -692,7 +692,7 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000);
+    }, 1000000);
     return () => clearInterval(timer);
   }, []);
 
@@ -784,12 +784,6 @@ const Dashboard: React.FC = () => {
             onClick={() => setActiveTab('reports')}
           >
             التقارير
-          </NavButton>
-          <NavButton 
-            active={activeTab === 'profile'} 
-            onClick={() => setActiveTab('profile')}
-          >
-            الملف الشخصي
           </NavButton>
         </Navigation>
 
@@ -947,12 +941,7 @@ const Dashboard: React.FC = () => {
                 <CardIcon>👤</CardIcon>
               </CardHeader>
               <CardContent>
-                <p>عرض وإدارة بياناتك الشخصية</p>
-                <ButtonGroup>
-                  <Button onClick={() => history.push('/profile')}>
-                    عرض الملف الشخصي
-                  </Button>
-                </ButtonGroup>
+                <p>انقر على صورتك في الشريط العلوي للوصول إلى الملف الشخصي</p>
               </CardContent>
             </Card>
           </Content>
