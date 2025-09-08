@@ -5,6 +5,8 @@ import { useFrappeAuth } from 'frappe-react-sdk';
 import { useTheme } from '../../shared/themes';
 import { useToast } from '../../contexts/ToastContext';
 import { useFrappeDeleteDoc } from 'frappe-react-sdk';
+import { useAuth } from '../../contexts/AuthContext';
+import { useFrappeApi } from '../../services/frappeApi';
 import { Layout } from '../Layout';
 import DataTable from '../DataTable/DataTable';
 import { DataTableColumn, TableAction, BulkAction } from '../DataTable/types';
@@ -136,6 +138,7 @@ interface Project {
 
 const ProjectsListNew: React.FC = () => {
   const { currentUser, isLoading: isAuthLoading, error: authError } = useFrappeAuth();
+  const { token, isAuthenticated: tokenAuth } = useAuth();
   const { theme } = useTheme();
   const { showSuccess, showError } = useToast();
   const history = useHistory();
@@ -147,34 +150,27 @@ const ProjectsListNew: React.FC = () => {
 
   // Use the proper Frappe hook for deleting documents
   const { deleteDoc, loading: isDeleting } = useFrappeDeleteDoc();
+  
+  // Initialize API client
+  const apiClient = useFrappeApi();
 
-  // Fetch projects using direct API call
+  // Fetch projects using FrappeApiClient
   const fetchProjects = async () => {
     setIsLoading(true);
     
     try {
-      console.log('Fetching projects from Frappe...');
+      console.log('Fetching projects from Frappe using API client...');
       
-      const res = await fetch('https://qswr.sa/api/resource/work_order_list?fields=["name","wo_num1","company","acc_name1","job_type1","district_name","create_date1","workflow_state","work_order_status1","modified"]&limit=100&as_dict=true', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
+      const response = await apiClient.getDocList('work_order_list', {
+        fields: '["name","wo_num1","company","acc_name1","job_type1","district_name","create_date1","workflow_state","work_order_status1","modified"]',
+        limit: 100,
+        as_dict: true
       });
       
-      console.log('Projects response status:', res.status);
+      console.log('Projects data received:', response);
       
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-      
-      const data = await res.json();
-      console.log('Projects data received:', data);
-      
-      if (data.data && Array.isArray(data.data)) {
-        setProjects(data.data);
+      if (response && response.data && Array.isArray(response.data)) {
+        setProjects(response.data);
       } else {
         setProjects([]);
       }
@@ -189,12 +185,14 @@ const ProjectsListNew: React.FC = () => {
   // Fetch projects on component mount
   useEffect(() => {
     const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    if (isLoggedIn) {
+    const hasToken = token && tokenAuth;
+    
+    if (isLoggedIn || hasToken) {
       fetchProjects();
     } else {
       history.push('/login');
     }
-  }, []);
+  }, [token, tokenAuth]);
 
   // Handle actions
   const handleViewProject = (projectName: string) => {

@@ -176,6 +176,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     // Clear localStorage
     localStorage.removeItem('frappe_token');
+    localStorage.removeItem('frappe_api_secret');
     localStorage.removeItem('frappe_user');
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('username');

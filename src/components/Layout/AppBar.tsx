@@ -2,6 +2,7 @@ import React from 'react';
 import styled, { keyframes, css } from 'styled-components';
 import { useHistory } from 'react-router-dom';
 import { useFrappeAuth } from 'frappe-react-sdk';
+import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../shared/themes';
 
 // Keyframe animations
@@ -262,25 +263,44 @@ const LogoutButton = styled.button`
 const AppBar: React.FC = () => {
   const { theme } = useTheme();
   const { currentUser, logout } = useFrappeAuth();
+  const { logout: authLogout } = useAuth();
   const history = useHistory();
 
   const handleLogout = async () => {
     try {
       console.log('Starting logout process...');
       
-      // Call Frappe logout first
-      await logout();
-      console.log('Frappe logout successful');
+      // Call AuthContext logout first (clears token and user data)
+      await authLogout();
+      console.log('AuthContext logout successful');
       
-      // Clear all authentication data
+      // Call Frappe logout if available
+      try {
+        await logout();
+        console.log('Frappe logout successful');
+      } catch (frappeError) {
+        console.log('Frappe logout failed, continuing with local cleanup:', frappeError);
+      }
+      
+      // Clear all authentication data from localStorage
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('username');
+      localStorage.removeItem('frappe_token');
+      localStorage.removeItem('frappe_api_secret');
       
-      // Clear cookies
+      // Clear all stored cookies from localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('cookie_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Clear browser cookies
       document.cookie = 'sid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       document.cookie = 'user_id=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       document.cookie = 'full_name=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       document.cookie = 'system_user=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+      document.cookie = 'NEXT_LOCALE=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       
       console.log('All authentication data cleared');
       
@@ -288,15 +308,25 @@ const AppBar: React.FC = () => {
       history.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if Frappe logout fails, clear everything and redirect
+      // Even if logout fails, clear everything and redirect
       localStorage.removeItem('isLoggedIn');
       localStorage.removeItem('username');
+      localStorage.removeItem('frappe_token');
+      localStorage.removeItem('frappe_api_secret');
       
-      // Clear cookies
+      // Clear all stored cookies from localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('cookie_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Clear browser cookies
       document.cookie = 'sid=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       document.cookie = 'user_id=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       document.cookie = 'full_name=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       document.cookie = 'system_user=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+      document.cookie = 'NEXT_LOCALE=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
       
       history.push('/login');
     }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-class FrappeApiClient {
+export class FrappeApiClient {
   private baseURL: string;
   private token: string | null = null;
   private apiSecret: string | null = null;
