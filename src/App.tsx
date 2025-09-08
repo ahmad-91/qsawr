@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
 import { FrappeProvider } from 'frappe-react-sdk';
 import { ToastProvider } from './contexts/ToastContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './shared/themes';
 import Login from './components/Login/Login';
 import Dashboard from './components/Dashboard/Dashboard';
@@ -26,8 +27,9 @@ function App() {
           shouldRetryOnError: false,
         }}
       >
-        <ToastProvider>
-          <Router>
+        <AuthProvider>
+          <ToastProvider>
+            <Router>
             <Switch>
               <Route exact path="/login" component={Login} />
               <Route exact path="/dashboard">
@@ -72,8 +74,9 @@ function App() {
                 <Redirect to="/dashboard" />
               </Route>
             </Switch>
-          </Router>
-        </ToastProvider>
+            </Router>
+          </ToastProvider>
+        </AuthProvider>
       </FrappeProvider>
     </ThemeProvider>
   );

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { useTheme } from '../../shared/themes';
 import { useToast } from '../../contexts/ToastContext';
 import { useFrappeAuth } from 'frappe-react-sdk';
+import { useAuth } from '../../contexts/AuthContext';
 
 import { Layout } from '../Layout';
 
@@ -151,16 +152,17 @@ const Login: React.FC = () => {
   const { currentUser, isLoading, updateCurrentUser } = useFrappeAuth();
   const { showError, showSuccess } = useToast();
   const history = useHistory();
+  const { login: tokenLogin, isAuthenticated } = useAuth();
   
   const frappeUrl = process.env.REACT_APP_FRAPPE_URL || 'https://qswr.sa';
 
   useEffect(() => {
-    // Check SDK state instead of cookies
-    if (!isLoading && currentUser) {
-      console.log('Login: User already authenticated via SDK, redirecting to dashboard...');
+    // Check both SDK and Token authentication
+    if (!isLoading && (currentUser || isAuthenticated)) {
+      console.log('Login: User already authenticated, redirecting to dashboard...');
       history.push('/dashboard');
     }
-  }, [isLoading, currentUser, history]);
+  }, [isLoading, currentUser, isAuthenticated, history]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,7 +173,23 @@ const Login: React.FC = () => {
     }
 
     try {
-      console.log('Login: Attempting login via fetch for:', username);
+      console.log('Login: Attempting Token-based login for:', username);
+      
+      // Try Token-based authentication first
+      const tokenSuccess = await tokenLogin(username, password);
+      
+      if (tokenSuccess) {
+        console.log('✅ Token-based login successful');
+        showSuccess('تم تسجيل الدخول بنجاح', 'مرحباً بك في النظام');
+        
+        // Wait a moment before redirecting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        history.push('/dashboard');
+        return;
+      }
+      
+      // Fallback to cookie-based authentication
+      console.log('Token login failed, trying cookie-based login...');
       
       const res = await fetch(`${frappeUrl}/api/method/login`, {
         method: 'POST',
